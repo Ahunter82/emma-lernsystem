@@ -26,7 +26,7 @@ ${themenText}
 Lernkontext (Emmas Stand, Stärken und Schwächen):
 ${kontext}
 
-${fach === 'mathe' ? 'Wichtig: Emma macht Fehler bei Textaufgaben weil sie zu schnell liest. Baue mindestens eine Textaufgabe ein, die genaues Lesen erfordert.' : ''}
+${fach === 'mathe' ? 'Wichtig: Emma macht Fehler bei Textaufgaben weil sie zu schnell liest. Baue mindestens eine echte Textaufgabe ein (mit einer konkreten Geschichte/Situation und Zahlen), die genaues Lesen erfordert.' : ''}
 
 Erstelle das Arbeitsblatt als JSON mit exakt dieser Struktur (kein Text außerhalb des JSON):
 
@@ -59,7 +59,14 @@ Regeln:
 - "zeilen" gibt an wie viele Schreibzeilen Platz gelassen werden soll (1–6)
 - "typ" bestimmt das Lösungsformat: freitext=Zeilen, rechnung=Rechenkasten, zeichnung=Zeichenfeld, luecke=Lückentext
 - Aufgaben ohne Unteraufgaben: "unteraufgaben" weglassen, dann "zeilen" direkt in die Aufgabe
-- Nur valides JSON, keine Kommentare`;
+- Nur valides JSON, keine Kommentare
+
+KRITISCH – Pflichtregeln für "anweisung":
+- "anweisung" MUSS den vollständigen, konkreten Aufgabentext enthalten (Zahlen, Namen, Situation)
+- "anweisung" darf NIEMALS nur eine Meta-Anweisung sein wie "Lies die Aufgabe durch" oder "Löse die folgenden Aufgaben" – das ist KEIN Aufgabeninhalt
+- Beispiel FALSCH: "anweisung": "Lies die Aufgabe zweimal durch und löse sie dann."
+- Beispiel RICHTIG: "anweisung": "Im Supermarkt kostet ein Apfel 0,35 €. Emma kauft 6 Äpfel und bezahlt mit einem 5-Euro-Schein. Wie viel Wechselgeld bekommt sie? Lies die Aufgabe genau – nicht alle Zahlen werden gebraucht."
+- Jede Aufgabe braucht echten, lösbaren Inhalt. Leseanweisungen kommen NUR zusätzlich zum Aufgabentext, nie stattdessen.`;
   }
 
   // ---- API-Aufruf ----
