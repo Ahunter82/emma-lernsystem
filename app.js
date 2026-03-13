@@ -558,6 +558,9 @@ Halte dich kurz und präzise. Keine langen Einleitungen.`;
       }
     }
 
+    // Lernstrategie im Hintergrund automatisch aktualisieren
+    generateStrategy(fach).catch(console.error);
+
   } catch (e) {
     showStatus(statusEl, 'Fehler: ' + e.message, 'error');
   } finally {
@@ -686,6 +689,135 @@ function saveApiKey(key) {
 }
 
 // ============================================
+// LERNSTRATEGIE
+// ============================================
+
+function initStrategy(fach) {
+  // Gespeicherte Strategie laden
+  const saved = localStorage.getItem('emma_strategie_' + fach);
+  if (saved) renderStrategy(fach, saved);
+
+  $('update-strategy-' + fach).addEventListener('click', () => handleGenerateStrategy(fach));
+}
+
+async function handleGenerateStrategy(fach) {
+  if (!state.apiKey) { showSetupModal(); return; }
+
+  const btn = $('update-strategy-' + fach);
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  try {
+    await generateStrategy(fach);
+    // Strategie-Card aufklappen
+    const body = $('strategy-body-' + fach);
+    const toggle = body.previousElementSibling?.querySelector('.toggle-btn');
+    body.classList.remove('collapsed');
+    if (toggle) toggle.classList.remove('collapsed');
+  } catch (e) {
+    alert('Fehler beim Generieren der Lernstrategie: ' + e.message);
+  } finally {
+    btn.textContent = '↺ Aktualisieren';
+    btn.disabled = false;
+  }
+}
+
+async function generateStrategy(fach) {
+  const fachName  = fach === 'mathe' ? 'Mathematik' : 'Deutsch';
+  const kontext   = $('kontext-' + fach).value || '(kein Kontext vorhanden)';
+  const plan      = getPlan(fach);
+  const punkte    = calcGesamtpunkte(fach);
+  const level     = getLevel(punkte);
+
+  const abgeschlossen = plan.themen.filter(t => t.status === 'abgeschlossen');
+  const aktuell       = plan.themen.find(t => t.status === 'aktuell');
+  const geplant       = plan.themen.filter(t => t.status === 'geplant');
+
+  const planZusammenfassung = `
+Abgeschlossene Themen: ${abgeschlossen.map(t => `"${t.name}" (${t.sterne}★)`).join(', ') || 'keine'}
+Aktuelles Thema: ${aktuell ? `"${aktuell.name}"` : 'keines'}
+Geplante Themen: ${geplant.map(t => `"${t.name}"`).join(', ') || 'keine'}
+Gesamtpunkte: ${punkte} (Level: ${level.name})
+Streak: ${plan.streak || 0} Tage`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type':      'application/json',
+      'x-api-key':         state.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model:      'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `Du bist ein erfahrener Grundschullehrer in NRW. Erstelle eine kompakte Lernstrategie für Emma, Klasse 4, Fach ${fachName}.
+
+Lernkontext:
+${kontext}
+
+Lernplan-Status:
+${planZusammenfassung}
+
+Erstelle eine strukturierte Lernstrategie mit genau diesen Abschnitten (Markdown-Format, kurz und konkret):
+
+## Stärken
+(2–3 Stichpunkte was gut klappt)
+
+## Schwächen & Baustellen
+(2–3 konkrete Punkte worauf zu achten ist)
+
+## Empfehlungen
+(3 konkrete Maßnahmen für die nächsten 2–3 Wochen)
+
+## Nächste Themen
+(1–2 Themenvorschläge die nach dem aktuellen Thema sinnvoll wären)
+
+Halte es kurz, klar und elterngerecht – keine Fachsprache.`,
+      }],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data.content[0].text;
+
+  // Speichern
+  localStorage.setItem('emma_strategie_' + fach, text);
+  if (DRIVE.isLoggedIn()) {
+    await DRIVE.writeFile(`lernstrategie-${fach}.md`, text);
+  }
+
+  renderStrategy(fach, text);
+}
+
+function renderStrategy(fach, markdown) {
+  const body = $('strategy-body-' + fach);
+
+  // Einfaches Markdown → HTML (##, -, **)
+  const html = markdown
+    .replace(/## (.+)/g, '<h4 class="strat-heading">$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^[-•] (.+)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  const lastUpdate = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  body.innerHTML = `
+    <div class="strategy-content">${html}</div>
+    <p class="strategy-updated">Zuletzt aktualisiert: ${lastUpdate}</p>
+  `;
+}
+
+// ============================================
 // GOOGLE AUTH
 // ============================================
 
@@ -724,17 +856,23 @@ async function loadFromDrive() {
       await DRIVE.writeFile('lernplan.json', JSON.stringify(state.plan, null, 2));
     }
 
-    // Kontext-Dateien
+    // Kontext-Dateien + Lernstrategie
     for (const fach of ['mathe', 'deutsch']) {
       const kontext = await DRIVE.readFile(`kontext-${fach}.md`);
       if (kontext) {
         $('kontext-' + fach).value = kontext;
         localStorage.setItem('emma_kontext_' + fach, kontext);
       } else {
-        // Erster Start: lokalen Inhalt in Drive schreiben
         const lokal = localStorage.getItem('emma_kontext_' + fach) || '';
         if (lokal) await DRIVE.writeFile(`kontext-${fach}.md`, lokal);
       }
+
+      const strategie = await DRIVE.readFile(`lernstrategie-${fach}.md`);
+      if (strategie) {
+        localStorage.setItem('emma_strategie_' + fach, strategie);
+        renderStrategy(fach, strategie);
+      }
+
       renderPlan(fach);
       renderRanking(fach);
     }
@@ -759,6 +897,7 @@ async function init() {
     initUpload(fach);
     initKontext(fach);
     initPdfButtons(fach);
+    initStrategy(fach);
     renderPlan(fach);
     renderRanking(fach);
   });

@@ -258,6 +258,68 @@ main {
 }
 
 /* ============================================
+   LERNSTRATEGIE
+   ============================================ */
+
+.btn-update-strategy {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-update-strategy:hover {
+  background: #eef2ff;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-update-strategy:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.strategy-content {
+  font-size: .88rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.strat-heading {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 12px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.strat-heading:first-child { margin-top: 0; }
+
+.strategy-content ul {
+  padding-left: 18px;
+  margin: 4px 0;
+}
+
+.strategy-content li {
+  margin-bottom: 3px;
+}
+
+.strategy-content p {
+  margin-bottom: 6px;
+}
+
+.strategy-updated {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  text-align: right;
+}
+
+/* ============================================
    LERNPLAN
    ============================================ */
 .btn-add-topic {
