@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emma Lernsystem</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- API Key Setup Modal -->
+  <div id="setup-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Ersteinrichtung</h2>
+      <p>Bitte gib deinen Anthropic API Key ein. Er wird nur lokal gespeichert.</p>
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
+      <button id="save-api-key">Speichern &amp; starten</button>
+    </div>
+  </div>
+
+  <!-- Thema abschließen Modal -->
+  <div id="abschluss-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Thema abschließen</h2>
+      <p id="abschluss-thema-name"></p>
+      <p class="modal-sub">Wie viele Sterne bekommt dieses Thema?</p>
+      <div class="star-input" id="abschluss-sterne">
+        <button class="star-btn" data-val="1">★</button>
+        <button class="star-btn" data-val="2">★</button>
+        <button class="star-btn" data-val="3">★</button>
+        <button class="star-btn" data-val="4">★</button>
+        <button class="star-btn" data-val="5">★</button>
+      </div>
+      <div class="modal-actions">
+        <button id="abschluss-cancel" class="btn-secondary">Abbrechen</button>
+        <button id="abschluss-confirm" class="btn-primary" disabled>Abschließen</button>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <h1>Emma Lernsystem</h1>
+    <div id="auth-area">
+      <button id="google-login-btn" class="btn-ghost">Google Drive</button>
+      <span id="user-info" class="hidden"></span>
+      <button id="google-logout-btn" class="btn-ghost hidden">Abmelden</button>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="mathe">Mathematik</button>
+    <button class="tab-btn" data-tab="deutsch">Deutsch</button>
+    <button class="tab-btn tab-btn--settings" data-tab="einstellungen">⚙</button>
+  </nav>
+
+  <main>
+
+    <!-- === MATHE TAB === -->
+    <section id="tab-mathe" class="tab-content active">
+
+      <!-- Fortschritt & Ranking -->
+      <div class="card card--ranking">
+        <div class="ranking-top">
+          <div class="level-info">
+            <span class="level-badge" id="level-badge-mathe">Lernling</span>
+            <span class="level-pts" id="level-pts-mathe">0 Punkte</span>
+          </div>
+          <div class="ranking-stats">
+            <div class="stat-pill" id="streak-mathe">
+              <span class="stat-icon">🔥</span><span id="streak-val-mathe">0</span> Tage
+            </div>
+            <div class="stat-pill">
+              <span class="stat-icon">✅</span><span id="done-val-mathe">0</span> Themen
+            </div>
+          </div>
+        </div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar"><div class="xp-fill" id="xp-fill-mathe" style="width:0%"></div></div>
+          <span class="xp-label" id="xp-label-mathe">0 / 50 XP zum nächsten Level</span>
+        </div>
+      </div>
+
+      <!-- Lernplan -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🗺️</span>
+          <h2>Lernplan</h2>
+          <button class="btn-add-topic" id="add-topic-btn-mathe">+ Thema</button>
+        </div>
+        <div class="card-body" id="plan-body-mathe">
+          <p class="placeholder-text">Noch kein Lernplan. Füge das erste Thema hinzu.</p>
+        </div>
+        <!-- Inline Thema-Eingabe -->
+        <div class="add-topic-form hidden" id="add-topic-form-mathe">
+          <input type="text" id="new-topic-input-mathe" placeholder="z.B. Schriftliche Multiplikation" />
+          <div class="row-right" style="gap:8px;display:flex;justify-content:flex-end;">
+            <button class="btn-secondary" id="add-topic-cancel-mathe">Abbrechen</button>
+            <button class="btn-primary" id="add-topic-save-mathe">Hinzufügen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Foto hochladen & analysieren -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📸</span>
+          <h2>Foto hochladen</h2>
+          <button class="toggle-btn" data-target="upload-body-mathe">▾</button>
+        </div>
+        <div id="upload-body-mathe" class="card-body">
+          <label class="file-label" for="upload-mathe">
+            <span id="upload-label-mathe">Datei wählen oder hier tippen</span>
+            <input type="file" id="upload-mathe" accept="image/*" capture="environment" />
+          </label>
+          <img id="preview-mathe" class="preview hidden" alt="Vorschau" />
+          <button id="analyse-mathe" class="btn-primary" disabled>Analysieren &amp; Kontext updaten</button>
+          <div id="analyse-status-mathe" class="status-msg hidden"></div>
+        </div>
+      </div>
+
+      <!-- Kontext Editor -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📝</span>
+          <h2>Kontext</h2>
+          <button class="toggle-btn collapsed" data-target="kontext-body-mathe">▾</button>
+        </div>
+        <div id="kontext-body-mathe" class="card-body collapsed">
+          <textarea id="kontext-mathe" rows="10" placeholder="Kontext wird geladen..."></textarea>
+          <div class="row-right">
+            <button id="save-kontext-mathe" class="btn-secondary">Speichern</button>
+          </div>
+          <div id="kontext-status-mathe" class="status-msg hidden"></div>
+        </div>
+      </div>
+
+      <!-- Übungen & Tests -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📄</span>
+          <h2>Übungen &amp; Tests</h2>
+        </div>
+        <div class="card-body">
+          <div class="current-topic-hint" id="topic-hint-mathe">
+            <span class="hint-label">Aktuelles Thema:</span>
+            <span id="topic-hint-name-mathe" class="hint-name">– kein Thema gesetzt –</span>
+          </div>
+          <div class="btn-group-vertical">
+            <button id="gen-uebung-mathe" class="btn-primary">Übungsblatt als PDF</button>
+            <button id="gen-klausur-mathe" class="btn-accent">Klassenarbeit simulieren (PDF)</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- === DEUTSCH TAB === -->
+    <section id="tab-deutsch" class="tab-content hidden">
+
+      <div class="card card--ranking">
+        <div class="ranking-top">
+          <div class="level-info">
+            <span class="level-badge" id="level-badge-deutsch">Lernling</span>
+            <span class="level-pts" id="level-pts-deutsch">0 Punkte</span>
+          </div>
+          <div class="ranking-stats">
+            <div class="stat-pill">
+              <span class="stat-icon">🔥</span><span id="streak-val-deutsch">0</span> Tage
+            </div>
+            <div class="stat-pill">
+              <span class="stat-icon">✅</span><span id="done-val-deutsch">0</span> Themen
+            </div>
+          </div>
+        </div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar"><div class="xp-fill" id="xp-fill-deutsch" style="width:0%"></div></div>
+          <span class="xp-label" id="xp-label-deutsch">0 / 50 XP zum nächsten Level</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🗺️</span>
+          <h2>Lernplan</h2>
+          <button class="btn-add-topic" id="add-topic-btn-deutsch">+ Thema</button>
+        </div>
+        <div class="card-body" id="plan-body-deutsch">
+          <p class="placeholder-text">Noch kein Lernplan. Füge das erste Thema hinzu.</p>
+        </div>
+        <div class="add-topic-form hidden" id="add-topic-form-deutsch">
+          <input type="text" id="new-topic-input-deutsch" placeholder="z.B. Aufsatz schreiben" />
+          <div style="gap:8px;display:flex;justify-content:flex-end;">
+            <button class="btn-secondary" id="add-topic-cancel-deutsch">Abbrechen</button>
+            <button class="btn-primary" id="add-topic-save-deutsch">Hinzufügen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📸</span>
+          <h2>Foto hochladen</h2>
+          <button class="toggle-btn" data-target="upload-body-deutsch">▾</button>
+        </div>
+        <div id="upload-body-deutsch" class="card-body">
+          <label class="file-label" for="upload-deutsch">
+            <span id="upload-label-deutsch">Datei wählen oder hier tippen</span>
+            <input type="file" id="upload-deutsch" accept="image/*" capture="environment" />
+          </label>
+          <img id="preview-deutsch" class="preview hidden" alt="Vorschau" />
+          <button id="analyse-deutsch" class="btn-primary" disabled>Analysieren &amp; Kontext updaten</button>
+          <div id="analyse-status-deutsch" class="status-msg hidden"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📝</span>
+          <h2>Kontext</h2>
+          <button class="toggle-btn collapsed" data-target="kontext-body-deutsch">▾</button>
+        </div>
+        <div id="kontext-body-deutsch" class="card-body collapsed">
+          <textarea id="kontext-deutsch" rows="10" placeholder="Kontext wird geladen..."></textarea>
+          <div class="row-right">
+            <button id="save-kontext-deutsch" class="btn-secondary">Speichern</button>
+          </div>
+          <div id="kontext-status-deutsch" class="status-msg hidden"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📄</span>
+          <h2>Übungen &amp; Tests</h2>
+        </div>
+        <div class="card-body">
+          <div class="current-topic-hint" id="topic-hint-deutsch">
+            <span class="hint-label">Aktuelles Thema:</span>
+            <span id="topic-hint-name-deutsch" class="hint-name">– kein Thema gesetzt –</span>
+          </div>
+          <div class="btn-group-vertical">
+            <button id="gen-uebung-deutsch" class="btn-primary">Übungsblatt als PDF</button>
+            <button id="gen-klausur-deutsch" class="btn-accent">Klassenarbeit simulieren (PDF)</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- === EINSTELLUNGEN TAB === -->
+    <section id="tab-einstellungen" class="tab-content hidden">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🔑</span>
+          <h2>API Key</h2>
+        </div>
+        <div class="card-body">
+          <label for="settings-api-key">Anthropic API Key</label>
+          <input type="password" id="settings-api-key" placeholder="sk-ant-..." />
+          <div class="row-right">
+            <button id="save-settings-api-key" class="btn-secondary">Speichern</button>
+          </div>
+          <div id="settings-api-status" class="status-msg hidden"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner"></div>
+    <p id="loading-text">Wird verarbeitet…</p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
