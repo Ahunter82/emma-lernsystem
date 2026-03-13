@@ -1159,8 +1159,18 @@ const INFO_TEXTS = {
     <strong>Punkte & Level</strong><br><br>
     Emma sammelt Punkte wenn Themen abgeschlossen werden:<br>
     <b>10 Basispunkte + 4 Punkte pro Stern</b> – also maximal 30 Punkte pro Thema.<br><br>
-    <strong>Level-Stufen:</strong><br>
-    🌱 Lernling (0–49 Pkt.) → ⭐ Aufsteigerin (50–149) → 🌟 Fortgeschrittene (150–299) → 💫 Expertin (300–499) → 🏆 Meisterin (500+)<br><br>
+    <strong>Level-Stufen:</strong>
+    <table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:.82rem;">
+      <tr style="background:#e0e7ff">
+        <th style="padding:5px 8px;text-align:left;border-radius:4px 0 0 4px">Level</th>
+        <th style="padding:5px 8px;text-align:right;border-radius:0 4px 4px 0">Punkte</th>
+      </tr>
+      <tr><td style="padding:4px 8px">🌱 Lernling</td><td style="padding:4px 8px;text-align:right">0 – 49</td></tr>
+      <tr style="background:#f5f3ff"><td style="padding:4px 8px">⭐ Aufsteigerin</td><td style="padding:4px 8px;text-align:right">50 – 149</td></tr>
+      <tr><td style="padding:4px 8px">🌟 Fortgeschrittene</td><td style="padding:4px 8px;text-align:right">150 – 299</td></tr>
+      <tr style="background:#f5f3ff"><td style="padding:4px 8px">💫 Expertin</td><td style="padding:4px 8px;text-align:right">300 – 499</td></tr>
+      <tr><td style="padding:4px 8px">🏆 Meisterin</td><td style="padding:4px 8px;text-align:right">500+</td></tr>
+    </table>
     <strong>🔥 Streak</strong> = Tage hintereinander, an denen ein Thema abgeschlossen wurde.
   `,
   lernstrategie: `
