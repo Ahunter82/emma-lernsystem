@@ -34,10 +34,10 @@ function getNextLevel(pts) {
 const DEFAULT_PLAN = {
   mathe: {
     themen: [
-      { id: 1, name: 'Geometrie: Flächen von Quadrat & Rechteck', status: 'abgeschlossen', sterne: 4 },
-      { id: 2, name: 'Kreis: Radius & Durchmesser',               status: 'aktuell',       sterne: 0 },
-      { id: 3, name: 'Schriftliche Multiplikation',                status: 'geplant',       sterne: 0 },
-      { id: 4, name: 'Schriftliche Division',                      status: 'geplant',       sterne: 0 },
+      { id: 1, name: 'Geometrie: Flächen von Quadrat & Rechteck', status: 'geplant', sterne: 0 },
+      { id: 2, name: 'Kreis: Radius & Durchmesser',               status: 'aktuell', sterne: 0 },
+      { id: 3, name: 'Schriftliche Multiplikation',                status: 'geplant', sterne: 0 },
+      { id: 4, name: 'Schriftliche Division',                      status: 'geplant', sterne: 0 },
     ],
     streak: 0,
     letzteUebung: null,
@@ -683,6 +683,20 @@ function initApiKeySetup() {
   if (!state.apiKey) showSetupModal();
 }
 
+// ---- Lernplan Reset ----
+function initResetPlan() {
+  $('reset-plan-btn').addEventListener('click', () => {
+    if (!confirm('Lernplan wirklich zurücksetzen? Punkte und Sterne gehen verloren.')) return;
+    state.plan = structuredClone(DEFAULT_PLAN);
+    savePlan();
+    ['mathe', 'deutsch'].forEach(fach => {
+      renderPlan(fach);
+      renderRanking(fach);
+    });
+    alert('Lernplan wurde zurückgesetzt.');
+  });
+}
+
 function saveApiKey(key) {
   state.apiKey = key;
   localStorage.setItem('emma_api_key', key);
@@ -1096,6 +1110,7 @@ async function init() {
   });
 
   initApiKeySetup();
+  initResetPlan();
   initGoogleAuth();
 
   // Drive initialisieren (Token aus URL-Hash oder localStorage)

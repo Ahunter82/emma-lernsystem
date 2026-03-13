@@ -932,6 +932,13 @@ button {
 }
 .btn-ghost:hover { background: rgba(255,255,255,.15); }
 
+.btn-danger {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
+}
+.btn-danger:hover { background: #fee2e2; }
+
 .btn-group-vertical {
   display: flex;
   flex-direction: column;
