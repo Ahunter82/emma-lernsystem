@@ -174,7 +174,8 @@
           <button class="toggle-btn collapsed" data-target="ergebnis-body-mathe">▾</button>
         </div>
         <div id="ergebnis-body-mathe" class="card-body collapsed">
-          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Übungsblatts oder der Klassenarbeit hoch. Die App wertet Fehler aus und passt den Lernplan an.</p>
+          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Blatts hoch und gib ein paar Eindrücke dazu an. Die App wertet alles gemeinsam aus.</p>
+
           <div class="ergebnis-type-row">
             <label class="type-radio">
               <input type="radio" name="ergebnis-type-mathe" value="uebung" checked /> Übungsblatt
@@ -183,6 +184,42 @@
               <input type="radio" name="ergebnis-type-mathe" value="klausur" /> Klassenarbeit
             </label>
           </div>
+
+          <div class="zeit-row">
+            <label class="zeit-label" for="ergebnis-zeit-mathe">⏱ Benötigte Zeit</label>
+            <div class="zeit-input-wrap">
+              <input type="number" id="ergebnis-zeit-mathe" min="1" max="120" placeholder="–" />
+              <span class="zeit-unit">Minuten</span>
+            </div>
+          </div>
+
+          <div class="bewertung-block">
+            <div class="bewertung-row">
+              <span class="bewertung-label">✏️ Sorgfalt</span>
+              <div class="bewertung-pills" data-group="sorgfalt-mathe">
+                <button class="pill-btn" data-val="1">Wenig</button>
+                <button class="pill-btn" data-val="2">Mittel</button>
+                <button class="pill-btn" data-val="3">Gut</button>
+              </div>
+            </div>
+            <div class="bewertung-row">
+              <span class="bewertung-label">🔥 Motivation</span>
+              <div class="bewertung-pills" data-group="motivation-mathe">
+                <button class="pill-btn" data-val="1">Wenig</button>
+                <button class="pill-btn" data-val="2">Mittel</button>
+                <button class="pill-btn" data-val="3">Hoch</button>
+              </div>
+            </div>
+            <div class="bewertung-row">
+              <span class="bewertung-label">🎯 Konzentration</span>
+              <div class="bewertung-pills" data-group="konzentration-mathe">
+                <button class="pill-btn" data-val="1">Unruhig</button>
+                <button class="pill-btn" data-val="2">Okay</button>
+                <button class="pill-btn" data-val="3">Fokussiert</button>
+              </div>
+            </div>
+          </div>
+
           <label class="file-label" for="ergebnis-upload-mathe">
             <span id="ergebnis-label-mathe">Ausgefülltes Blatt fotografieren / wählen</span>
             <input type="file" id="ergebnis-upload-mathe" accept="image/*" capture="environment" />
@@ -308,7 +345,8 @@
           <button class="toggle-btn collapsed" data-target="ergebnis-body-deutsch">▾</button>
         </div>
         <div id="ergebnis-body-deutsch" class="card-body collapsed">
-          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Übungsblatts oder der Klassenarbeit hoch. Die App wertet Fehler aus und passt den Lernplan an.</p>
+          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Blatts hoch und gib ein paar Eindrücke dazu an. Die App wertet alles gemeinsam aus.</p>
+
           <div class="ergebnis-type-row">
             <label class="type-radio">
               <input type="radio" name="ergebnis-type-deutsch" value="uebung" checked /> Übungsblatt
@@ -317,6 +355,42 @@
               <input type="radio" name="ergebnis-type-deutsch" value="klausur" /> Klassenarbeit
             </label>
           </div>
+
+          <div class="zeit-row">
+            <label class="zeit-label" for="ergebnis-zeit-deutsch">⏱ Benötigte Zeit</label>
+            <div class="zeit-input-wrap">
+              <input type="number" id="ergebnis-zeit-deutsch" min="1" max="120" placeholder="–" />
+              <span class="zeit-unit">Minuten</span>
+            </div>
+          </div>
+
+          <div class="bewertung-block">
+            <div class="bewertung-row">
+              <span class="bewertung-label">✏️ Sorgfalt</span>
+              <div class="bewertung-pills" data-group="sorgfalt-deutsch">
+                <button class="pill-btn" data-val="1">Wenig</button>
+                <button class="pill-btn" data-val="2">Mittel</button>
+                <button class="pill-btn" data-val="3">Gut</button>
+              </div>
+            </div>
+            <div class="bewertung-row">
+              <span class="bewertung-label">🔥 Motivation</span>
+              <div class="bewertung-pills" data-group="motivation-deutsch">
+                <button class="pill-btn" data-val="1">Wenig</button>
+                <button class="pill-btn" data-val="2">Mittel</button>
+                <button class="pill-btn" data-val="3">Hoch</button>
+              </div>
+            </div>
+            <div class="bewertung-row">
+              <span class="bewertung-label">🎯 Konzentration</span>
+              <div class="bewertung-pills" data-group="konzentration-deutsch">
+                <button class="pill-btn" data-val="1">Unruhig</button>
+                <button class="pill-btn" data-val="2">Okay</button>
+                <button class="pill-btn" data-val="3">Fokussiert</button>
+              </div>
+            </div>
+          </div>
+
           <label class="file-label" for="ergebnis-upload-deutsch">
             <span id="ergebnis-label-deutsch">Ausgefülltes Blatt fotografieren / wählen</span>
             <input type="file" id="ergebnis-upload-deutsch" accept="image/*" capture="environment" />

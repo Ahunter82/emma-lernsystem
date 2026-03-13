@@ -698,6 +698,7 @@ function initErgebnis(fach) {
   const label   = $('ergebnis-label-' + fach);
   const btn     = $('ergebnis-auswerten-' + fach);
 
+  // Foto-Upload
   input.addEventListener('change', () => {
     const file = input.files[0];
     if (!file) return;
@@ -712,7 +713,33 @@ function initErgebnis(fach) {
     reader.readAsDataURL(file);
   });
 
+  // Bewertungs-Pills: jeweils nur eine aktiv pro Gruppe
+  document.querySelectorAll(`[data-group$="-${fach}"]`).forEach(group => {
+    group.querySelectorAll('.pill-btn').forEach(pill => {
+      pill.addEventListener('click', () => {
+        group.querySelectorAll('.pill-btn').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      });
+    });
+  });
+
   btn.addEventListener('click', () => handleErgebnisAuswerten(fach, btn._dataUrl));
+}
+
+function getErgebnisInputs(fach) {
+  const zeit = $('ergebnis-zeit-' + fach)?.value;
+
+  function getPillVal(gruppe) {
+    const active = document.querySelector(`[data-group="${gruppe}-${fach}"] .pill-btn.active`);
+    return active ? active.textContent : null;
+  }
+
+  return {
+    zeit:          zeit ? parseInt(zeit) : null,
+    sorgfalt:      getPillVal('sorgfalt'),
+    motivation:    getPillVal('motivation'),
+    konzentration: getPillVal('konzentration'),
+  };
 }
 
 async function handleErgebnisAuswerten(fach, dataUrl) {
@@ -725,6 +752,15 @@ async function handleErgebnisAuswerten(fach, dataUrl) {
   const base64     = dataUrl.split(',')[1];
   const mediaType  = dataUrl.split(';')[0].split(':')[1];
   const fachName   = fach === 'mathe' ? 'Mathematik' : 'Deutsch';
+  const inputs     = getErgebnisInputs(fach);
+
+  // Eltern-Eindrücke als Text für den Prompt
+  const eindrucksText = [
+    inputs.zeit          ? `Benötigte Zeit: ${inputs.zeit} Minuten` : null,
+    inputs.sorgfalt      ? `Sorgfalt: ${inputs.sorgfalt}` : null,
+    inputs.motivation    ? `Motivation: ${inputs.motivation}` : null,
+    inputs.konzentration ? `Konzentration: ${inputs.konzentration}` : null,
+  ].filter(Boolean).join(' | ');
 
   showLoading('Ergebnis wird ausgewertet…');
 
@@ -749,11 +785,12 @@ ${thema ? `Aktuelles Thema: "${thema.name}"` : ''}
 
 Lernkontext:
 ${kontext || '(kein Kontext vorhanden)'}
+${eindrucksText ? `\nEltern-Eindrücke zur Lernsituation: ${eindrucksText}` : ''}
 
 Analysiere das Foto des ausgefüllten Blatts und erstelle einen Auswertungsbericht:
 
 ## Gesamteindruck
-(Kurze Einschätzung in 1–2 Sätzen)
+(Kurze Einschätzung in 1–2 Sätzen – beziehe die Eltern-Eindrücke mit ein falls vorhanden)
 
 ## Punkte
 (Geschätzte Punktzahl / Maximalpunkte, z.B. "ca. 14 / 20 Punkte")
@@ -762,13 +799,13 @@ Analysiere das Foto des ausgefüllten Blatts und erstelle einen Auswertungsberic
 (Konkrete Stichpunkte was gut war)
 
 ## Fehler & Muster
-(Welche Fehler hat Emma gemacht? Gibt es ein Muster?)
+(Welche Fehler hat Emma gemacht? Gibt es ein Muster? Steht das im Zusammenhang mit Sorgfalt/Konzentration?)
 
 ## Tipps für Emma
 (2–3 kurze, kindgerechte Tipps direkt an Emma gerichtet, "Du-Form")
 
 ## Kontext-Update
-(1–2 Sätze die an den Kontext angehängt werden, Stil: "Datum [heute]: Bei der Auswertung vom ${typLabel} zu '${thema?.name || ''}' zeigte sich...")
+(1–2 Sätze für den Kontext, inkl. Zeit und Eindrücke falls vorhanden. Stil: "Datum [heute]: ${typLabel} zu '${thema?.name || ''}': ...")
 
 Halte es klar und ermutigend.` },
           ],
