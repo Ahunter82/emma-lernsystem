@@ -82,14 +82,12 @@ const DRIVE = (() => {
     await _requestToken('select_account');
   }
 
-  // Stilles Re-Login: kein Popup wenn Google-Session noch aktiv
-  async function _silentRefresh() {
-    try {
-      await _requestToken('');
-      return true;
-    } catch {
-      return false;
-    }
+  // Stilles Re-Login: kein Popup wenn Google-Session noch aktiv (max 8 Sek.)
+  function _silentRefresh() {
+    return Promise.race([
+      _requestToken(''),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+    ]).then(() => true).catch(() => false);
   }
 
   function logout() {
@@ -222,12 +220,17 @@ const DRIVE = (() => {
   }
 
   function _waitForGIS() {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (typeof google !== 'undefined' && google.accounts) { resolve(); return; }
+      let elapsed = 0;
       const interval = setInterval(() => {
+        elapsed += 100;
         if (typeof google !== 'undefined' && google.accounts) {
           clearInterval(interval);
           resolve();
+        } else if (elapsed > 10000) {
+          clearInterval(interval);
+          reject(new Error('Google-Dienste konnten nicht geladen werden. Bitte Seite neu laden.'));
         }
       }, 100);
     });

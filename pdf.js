@@ -26,7 +26,10 @@ ${themenText}
 Lernkontext (Emmas Stand, Stärken und Schwächen):
 ${kontext}
 
-${fach === 'mathe' ? 'Wichtig: Emma macht Fehler bei Textaufgaben weil sie zu schnell liest. Baue mindestens eine echte Textaufgabe ein (mit einer konkreten Geschichte/Situation und Zahlen), die genaues Lesen erfordert.' : ''}
+WICHTIG – Niveau Grundschule Klasse 4 NRW (9–10 Jahre):
+Erlaubte Themen: schriftliche Addition/Subtraktion, schriftliche Multiplikation/Division, Zahlen bis 1.000.000 lesen/schreiben/runden, einfache Brüche (½, ¼, ¾), Fläche von Rechteck und Quadrat berechnen (Länge × Breite), Umfang, einfache Sachaufgaben, Maßeinheiten umrechnen (cm/m/km, g/kg, ml/l).
+VERBOTEN – zu schwer für Klasse 4: Rauminhalt/Volumen (cm³), 3D-Körper-Formeln, algebraische Gleichungen umstellen (z.B. V=l×b×h → l=?), Variablen, negative Zahlen, Koordinatensysteme, Prozentrechnung, Dreisatz.
+${fach === 'mathe' ? 'Baue mindestens eine echte Textaufgabe ein (mit einer konkreten Geschichte/Situation und Zahlen), die genaues Lesen erfordert.' : ''}
 
 Erstelle das Arbeitsblatt als JSON mit exakt dieser Struktur (kein Text außerhalb des JSON):
 

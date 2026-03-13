@@ -1118,7 +1118,9 @@ async function loadFromDrive() {
         localStorage.setItem('emma_lernplan', planRaw);
       } catch { /* korrupte Datei ignorieren */ }
     } else {
-      // Erster Start: Default-Plan in Drive schreiben
+      // Kein lernplan.json gefunden → neuer Ordner (evtl. falsches Konto)
+      showDriveSharingHint();
+      // Default-Plan in den neuen Ordner schreiben
       await DRIVE.writeFile('lernplan.json', JSON.stringify(state.plan, null, 2));
     }
 
@@ -1145,9 +1147,33 @@ async function loadFromDrive() {
     }
   } catch (e) {
     console.error('Drive Ladefehler:', e);
+    alert('Drive konnte nicht geladen werden: ' + e.message);
   } finally {
     hideLoading();
   }
+}
+
+function showDriveSharingHint() {
+  // Zeigt einmalig einen Hinweis wenn kein freigegebener Ordner gefunden wurde
+  let box = document.getElementById('drive-sharing-hint');
+  if (box) return;
+  box = document.createElement('div');
+  box.id = 'drive-sharing-hint';
+  box.className = 'info-panel';
+  box.style.cssText = 'margin:12px 16px;border-left-color:#d97706;background:#fffbeb;';
+  box.innerHTML = `
+    <strong>⚠️ Kein gemeinsamer Drive-Ordner gefunden</strong><br><br>
+    Ein neuer leerer Ordner "Emma-Lernsystem" wurde in deinem Google Drive angelegt.
+    Wenn dein Partner bereits Daten hat, muss er/sie den Ordner zuerst mit dir teilen:<br><br>
+    <b>So geht's:</b><br>
+    1. Partner öffnet <a href="https://drive.google.com" target="_blank">Google Drive</a><br>
+    2. Rechtsklick auf den Ordner <b>"Emma-Lernsystem"</b> → <b>Freigeben</b><br>
+    3. Deine E-Mail-Adresse eingeben → Rolle: <b>Bearbeiter</b> → Senden<br>
+    4. Danach den freigegebenen Ordner in dein Google Drive hinzufügen und hier neu anmelden.<br><br>
+    <button type="button" class="btn-ghost-small" onclick="document.getElementById('drive-sharing-hint').remove()">Hinweis schließen</button>
+  `;
+  const main = document.querySelector('main');
+  if (main) main.prepend(box);
 }
 
 // ============================================
