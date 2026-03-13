@@ -1151,6 +1151,114 @@ async function loadFromDrive() {
 }
 
 // ============================================
+// INFO-BUTTONS
+// ============================================
+
+const INFO_TEXTS = {
+  ranking: `
+    <strong>Punkte & Level</strong><br><br>
+    Emma sammelt Punkte wenn Themen abgeschlossen werden:<br>
+    <b>10 Basispunkte + 4 Punkte pro Stern</b> – also maximal 30 Punkte pro Thema.<br><br>
+    <strong>Level-Stufen:</strong><br>
+    🌱 Lernling (0–49 Pkt.) → ⭐ Aufsteigerin (50–149) → 🌟 Fortgeschrittene (150–299) → 💫 Expertin (300–499) → 🏆 Meisterin (500+)<br><br>
+    <strong>🔥 Streak</strong> = Tage hintereinander, an denen ein Thema abgeschlossen wurde.
+  `,
+  lernstrategie: `
+    <strong>Lernstrategie</strong><br><br>
+    Die KI analysiert Emmas aktuellen Lernstand und erstellt eine persönliche Strategie mit Stärken, Schwächen und konkreten Empfehlungen für die nächsten Wochen.<br><br>
+    Wird automatisch aktualisiert nach jeder Foto-Analyse – oder manuell mit "↺ Aktualisieren".
+  `,
+  lernplan: `
+    <strong>Lernplan</strong><br><br>
+    Hier legst du fest, welche Themen Emma in welcher Reihenfolge lernen soll.<br><br>
+    • <b>→ Aktuell</b> = das Thema das gerade geübt wird<br>
+    • <b>Geplant</b> = kommt als nächstes dran<br>
+    • <b>✓ Abgeschlossen</b> = fertig, Sterne vergeben<br><br>
+    Wenn ein Thema abgeschlossen wird, springt das nächste automatisch auf "Aktuell". Mit den Pfeilen ↑↓ bestimmst du die Reihenfolge.
+  `,
+  foto: `
+    <strong>Foto hochladen</strong><br><br>
+    Mach ein Foto von Emmas Hausaufgaben oder einem Arbeitsblatt und lade es hier hoch.<br><br>
+    Die KI erkennt das Thema, bewertet den Schwierigkeitsgrad und ergänzt den Lernkontext automatisch – das ist die Basis für alle weiteren Analysen und generierten Übungen.
+  `,
+  kontext: `
+    <strong>Kontext</strong><br><br>
+    Der Kontext ist das <b>"Gedächtnis"</b> der App – alles was die KI über Emmas aktuellen Stand, Stärken und Schwächen weiß.<br><br>
+    Er wird automatisch erweitert wenn du Fotos analysierst oder Ergebnisse einreichst. Du kannst ihn auch manuell anpassen. Je besser der Kontext, desto passender die generierten Übungsblätter.
+  `,
+  uebungen: `
+    <strong>Übungen & Tests</strong><br><br>
+    Wähle ein oder mehrere Themen aus der Liste und lass die KI ein druckfertiges Arbeitsblatt erstellen:<br><br>
+    • <b>Übungsblatt</b> = zum Üben zu Hause, ca. 20–30 Min., aufbauend von leicht nach schwer<br>
+    • <b>Klassenarbeit simulieren</b> = im NRW Klasse-4-Format, ca. 45 Min., realistischer Schwierigkeitsgrad<br><br>
+    Das PDF öffnet sich in einem neuen Fenster – dort einfach drucken oder als PDF speichern.
+  `,
+  ergebnis: `
+    <strong>Ergebnis einreichen</strong><br><br>
+    Lade ein Foto des ausgefüllten Blatts hoch – nach einer Übung oder Klassenarbeit.<br><br>
+    Die KI wertet Fehler und Muster aus, gibt Tipps direkt an Emma und aktualisiert automatisch den Lernkontext und die Lernstrategie. Du kannst zusätzlich Zeit, Sorgfalt, Motivation und Konzentration angeben – das fließt in die Auswertung ein.
+  `,
+};
+
+function initInfoButtons() {
+  const CARD_INFO_MAP = {
+    'Lernstrategie':      'lernstrategie',
+    'Lernplan':           'lernplan',
+    'Foto hochladen':     'foto',
+    'Kontext':            'kontext',
+    'Übungen & Tests':    'uebungen',
+    'Ergebnis einreichen':'ergebnis',
+  };
+
+  // Info-Buttons in Card-Header injizieren
+  document.querySelectorAll('.card-header h2').forEach(h2 => {
+    const key = CARD_INFO_MAP[h2.textContent.trim()];
+    if (!key) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'info-btn';
+    btn.dataset.info = key;
+    btn.title = 'Was ist das?';
+    btn.textContent = 'ℹ';
+    h2.after(btn);
+  });
+
+  // Info-Button für Ranking-Karte (kein card-header)
+  document.querySelectorAll('.card--ranking .level-info').forEach(levelInfo => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'info-btn';
+    btn.dataset.info = 'ranking';
+    btn.title = 'Was ist das?';
+    btn.textContent = 'ℹ';
+    levelInfo.appendChild(btn);
+  });
+
+  // Click-Handler für alle Info-Buttons
+  document.querySelectorAll('.info-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key  = btn.dataset.info;
+      const card = btn.closest('.card');
+      if (!card) return;
+
+      let panel = card.querySelector('.info-panel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.className = 'info-panel hidden';
+        panel.innerHTML = INFO_TEXTS[key] || '';
+        const anchor = card.querySelector('.card-header') || card.querySelector('.xp-bar-wrap');
+        if (anchor) anchor.after(panel);
+        else card.prepend(panel);
+      }
+
+      const opening = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !opening);
+      btn.classList.toggle('active', opening);
+    });
+  });
+}
+
+// ============================================
 // INIT
 // ============================================
 
@@ -1173,6 +1281,7 @@ async function init() {
 
   initApiKeySetup();
   initResetPlan();
+  initInfoButtons();
   initGoogleAuth();
 
   // Drive initialisieren (Token aus URL-Hash oder localStorage)
