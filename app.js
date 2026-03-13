@@ -624,18 +624,29 @@ function initKontext(fach) {
 // ============================================
 
 function initPdfButtons(fach) {
-  $('gen-uebung-' + fach).addEventListener('click', () => {
-    const thema = getAktuellesThema(fach);
-    if (!thema) {
-      alert('Bitte erst ein aktuelles Thema im Lernplan setzen.');
-      return;
-    }
-    alert(`PDF-Generierung (Schritt 5) für:\n"${thema.name}"`);
-  });
+  $('gen-uebung-' + fach).addEventListener('click', () => handleGeneratePdf(fach, 'uebung'));
+  $('gen-klausur-' + fach).addEventListener('click', () => handleGeneratePdf(fach, 'klausur'));
+}
 
-  $('gen-klausur-' + fach).addEventListener('click', () => {
-    alert('Klassenarbeit-Simulation wird in Schritt 6 implementiert.');
-  });
+async function handleGeneratePdf(fach, modus) {
+  if (!state.apiKey) { showSetupModal(); return; }
+
+  const thema = getAktuellesThema(fach);
+  if (!thema) {
+    alert('Bitte erst ein aktuelles Thema im Lernplan setzen.');
+    return;
+  }
+
+  const label = modus === 'klausur' ? 'Klassenarbeit' : 'Übungsblatt';
+  showLoading(`${label} wird generiert…`);
+
+  try {
+    await PDF.generate(fach, modus, state.apiKey);
+  } catch (e) {
+    alert('Fehler beim Generieren: ' + e.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 // ============================================
