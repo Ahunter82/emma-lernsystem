@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Emma Lernsystem</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Emma" />
+  <link rel="apple-touch-icon" href="icon-192.svg" />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -433,5 +442,10 @@
   <script src="drive.js"></script>
   <script src="pdf.js"></script>
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/emma-lernsystem/sw.js');
+    }
+  </script>
 </body>
 </html>
