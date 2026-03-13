@@ -689,6 +689,161 @@ function saveApiKey(key) {
 }
 
 // ============================================
+// ERGEBNIS-ANALYSE
+// ============================================
+
+function initErgebnis(fach) {
+  const input   = $('ergebnis-upload-' + fach);
+  const preview = $('ergebnis-preview-' + fach);
+  const label   = $('ergebnis-label-' + fach);
+  const btn     = $('ergebnis-auswerten-' + fach);
+
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.classList.remove('hidden');
+      label.textContent = file.name;
+      btn.disabled = false;
+      btn._dataUrl = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  btn.addEventListener('click', () => handleErgebnisAuswerten(fach, btn._dataUrl));
+}
+
+async function handleErgebnisAuswerten(fach, dataUrl) {
+  if (!state.apiKey) { showSetupModal(); return; }
+
+  const typ        = document.querySelector(`input[name="ergebnis-type-${fach}"]:checked`)?.value || 'uebung';
+  const typLabel   = typ === 'klausur' ? 'Klassenarbeit' : 'Übungsblatt';
+  const kontext    = $('kontext-' + fach).value || '';
+  const thema      = getAktuellesThema(fach);
+  const base64     = dataUrl.split(',')[1];
+  const mediaType  = dataUrl.split(';')[0].split(':')[1];
+  const fachName   = fach === 'mathe' ? 'Mathematik' : 'Deutsch';
+
+  showLoading('Ergebnis wird ausgewertet…');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: `Du wertest ein ausgefülltes ${typLabel} von Emma aus, Klasse 4 NRW, Fach ${fachName}.
+${thema ? `Aktuelles Thema: "${thema.name}"` : ''}
+
+Lernkontext:
+${kontext || '(kein Kontext vorhanden)'}
+
+Analysiere das Foto des ausgefüllten Blatts und erstelle einen Auswertungsbericht:
+
+## Gesamteindruck
+(Kurze Einschätzung in 1–2 Sätzen)
+
+## Punkte
+(Geschätzte Punktzahl / Maximalpunkte, z.B. "ca. 14 / 20 Punkte")
+
+## Richtig gemacht
+(Konkrete Stichpunkte was gut war)
+
+## Fehler & Muster
+(Welche Fehler hat Emma gemacht? Gibt es ein Muster?)
+
+## Tipps für Emma
+(2–3 kurze, kindgerechte Tipps direkt an Emma gerichtet, "Du-Form")
+
+## Kontext-Update
+(1–2 Sätze die an den Kontext angehängt werden, Stil: "Datum [heute]: Bei der Auswertung vom ${typLabel} zu '${thema?.name || ''}' zeigte sich...")
+
+Halte es klar und ermutigend.` },
+          ],
+        }],
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data   = await response.json();
+    const result = data.content[0].text;
+
+    renderErgebnisResult(fach, result, typ);
+
+    // Kontext automatisch updaten
+    const updateMatch = result.match(/## Kontext-Update\s*([\s\S]*?)(?=##|$)/i);
+    if (updateMatch) {
+      const update  = updateMatch[1].trim();
+      const updated = (kontext ? kontext + '\n\n---\n' : '') + update;
+      $('kontext-' + fach).value = updated;
+      localStorage.setItem('emma_kontext_' + fach, updated);
+      if (DRIVE.isLoggedIn()) await DRIVE.writeFile(`kontext-${fach}.md`, updated);
+    }
+
+    // Lernstrategie im Hintergrund neu generieren
+    generateStrategy(fach).catch(console.error);
+
+  } catch (e) {
+    showStatus($('ergebnis-status-' + fach), 'Fehler: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderErgebnisResult(fach, text, typ) {
+  const container = $('ergebnis-result-' + fach);
+  const typLabel  = typ === 'klausur' ? 'Klassenarbeit' : 'Übungsblatt';
+
+  // Punkte-Zeile für Ranking extrahieren
+  const ptsMatch = text.match(/ca\.?\s*(\d+)\s*\/\s*(\d+)/);
+  const ptsHtml  = ptsMatch
+    ? `<div class="ergebnis-score">
+         <span class="score-num">${ptsMatch[1]}</span>
+         <span class="score-div"> / ${ptsMatch[2]}</span>
+         <span class="score-label">Punkte</span>
+         <div class="score-bar-wrap"><div class="score-bar" style="width:${Math.round(ptsMatch[1]/ptsMatch[2]*100)}%"></div></div>
+       </div>`
+    : '';
+
+  const html = text
+    .replace(/## (.+)/g, '<h4 class="strat-heading">$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^[-•] (.+)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  container.innerHTML = `
+    <div class="ergebnis-result-box">
+      <div class="ergebnis-result-header">
+        <strong>Auswertung ${typLabel}</strong>
+        <button class="btn-ghost-small" onclick="this.closest('.ergebnis-result-box').remove()">✕</button>
+      </div>
+      ${ptsHtml}
+      <div class="analyse-result-body">${html}</div>
+      <p class="analyse-result-hint">✅ Kontext & Lernstrategie wurden aktualisiert.</p>
+    </div>`;
+
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================
 // LERNSTRATEGIE
 // ============================================
 
@@ -898,6 +1053,7 @@ async function init() {
     initKontext(fach);
     initPdfButtons(fach);
     initStrategy(fach);
+    initErgebnis(fach);
     renderPlan(fach);
     renderRanking(fach);
   });

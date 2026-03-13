@@ -166,6 +166,34 @@
         </div>
       </div>
 
+      <!-- Ergebnis einreichen -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">✅</span>
+          <h2>Ergebnis einreichen</h2>
+          <button class="toggle-btn collapsed" data-target="ergebnis-body-mathe">▾</button>
+        </div>
+        <div id="ergebnis-body-mathe" class="card-body collapsed">
+          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Übungsblatts oder der Klassenarbeit hoch. Die App wertet Fehler aus und passt den Lernplan an.</p>
+          <div class="ergebnis-type-row">
+            <label class="type-radio">
+              <input type="radio" name="ergebnis-type-mathe" value="uebung" checked /> Übungsblatt
+            </label>
+            <label class="type-radio">
+              <input type="radio" name="ergebnis-type-mathe" value="klausur" /> Klassenarbeit
+            </label>
+          </div>
+          <label class="file-label" for="ergebnis-upload-mathe">
+            <span id="ergebnis-label-mathe">Ausgefülltes Blatt fotografieren / wählen</span>
+            <input type="file" id="ergebnis-upload-mathe" accept="image/*" capture="environment" />
+          </label>
+          <img id="ergebnis-preview-mathe" class="preview hidden" alt="Vorschau" />
+          <button id="ergebnis-auswerten-mathe" class="btn-primary" disabled>Auswerten</button>
+          <div id="ergebnis-status-mathe" class="status-msg hidden"></div>
+          <div id="ergebnis-result-mathe"></div>
+        </div>
+      </div>
+
     </section>
 
     <!-- === DEUTSCH TAB === -->
@@ -269,6 +297,34 @@
             <button id="gen-uebung-deutsch" class="btn-primary">Übungsblatt als PDF</button>
             <button id="gen-klausur-deutsch" class="btn-accent">Klassenarbeit simulieren (PDF)</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Ergebnis einreichen -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">✅</span>
+          <h2>Ergebnis einreichen</h2>
+          <button class="toggle-btn collapsed" data-target="ergebnis-body-deutsch">▾</button>
+        </div>
+        <div id="ergebnis-body-deutsch" class="card-body collapsed">
+          <p class="ergebnis-hint">Lade ein Foto des ausgefüllten Übungsblatts oder der Klassenarbeit hoch. Die App wertet Fehler aus und passt den Lernplan an.</p>
+          <div class="ergebnis-type-row">
+            <label class="type-radio">
+              <input type="radio" name="ergebnis-type-deutsch" value="uebung" checked /> Übungsblatt
+            </label>
+            <label class="type-radio">
+              <input type="radio" name="ergebnis-type-deutsch" value="klausur" /> Klassenarbeit
+            </label>
+          </div>
+          <label class="file-label" for="ergebnis-upload-deutsch">
+            <span id="ergebnis-label-deutsch">Ausgefülltes Blatt fotografieren / wählen</span>
+            <input type="file" id="ergebnis-upload-deutsch" accept="image/*" capture="environment" />
+          </label>
+          <img id="ergebnis-preview-deutsch" class="preview hidden" alt="Vorschau" />
+          <button id="ergebnis-auswerten-deutsch" class="btn-primary" disabled>Auswerten</button>
+          <div id="ergebnis-status-deutsch" class="status-msg hidden"></div>
+          <div id="ergebnis-result-deutsch"></div>
         </div>
       </div>
 
