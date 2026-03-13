@@ -66,14 +66,41 @@ header h1 {
   flex-shrink: 0;
 }
 
-#user-info {
-  font-size: .8rem;
-  opacity: .9;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.drive-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
   white-space: nowrap;
 }
+
+.drive-status--off {
+  background: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.75);
+}
+.drive-status--off:hover { background: rgba(255,255,255,.25); }
+
+.drive-status--on {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  cursor: default;
+}
+
+.drive-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.drive-status--off .drive-dot { background: rgba(255,255,255,.4); }
+.drive-status--on  .drive-dot { background: #4ade80; box-shadow: 0 0 4px #4ade80; }
 
 /* ---- Tab Nav ---- */
 .tab-nav {

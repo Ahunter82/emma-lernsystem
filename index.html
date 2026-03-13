@@ -50,8 +50,12 @@
   <header>
     <h1>Emma Lernsystem</h1>
     <div id="auth-area">
-      <button id="google-login-btn" class="btn-ghost">Google Drive</button>
-      <span id="user-info" class="hidden"></span>
+      <button id="google-login-btn" class="drive-status drive-status--off">
+        <span class="drive-dot"></span>Drive verbinden
+      </button>
+      <button id="google-connected-btn" class="drive-status drive-status--on hidden">
+        <span class="drive-dot"></span><span id="user-info">Drive</span>
+      </button>
       <button id="google-logout-btn" class="btn-ghost hidden">Abmelden</button>
     </div>
   </header>
@@ -117,8 +121,8 @@
         <div class="add-topic-form hidden" id="add-topic-form-mathe">
           <input type="text" id="new-topic-input-mathe" placeholder="z.B. Schriftliche Multiplikation" />
           <div class="row-right" style="gap:8px;display:flex;justify-content:flex-end;">
-            <button class="btn-secondary" id="add-topic-cancel-mathe">Abbrechen</button>
-            <button class="btn-primary" id="add-topic-save-mathe">Hinzufügen</button>
+            <button type="button" class="btn-secondary" id="add-topic-cancel-mathe">Abbrechen</button>
+            <button type="button" class="btn-primary" id="add-topic-save-mathe">Hinzufügen</button>
           </div>
         </div>
       </div>
@@ -291,8 +295,8 @@
         <div class="add-topic-form hidden" id="add-topic-form-deutsch">
           <input type="text" id="new-topic-input-deutsch" placeholder="z.B. Aufsatz schreiben" />
           <div style="gap:8px;display:flex;justify-content:flex-end;">
-            <button class="btn-secondary" id="add-topic-cancel-deutsch">Abbrechen</button>
-            <button class="btn-primary" id="add-topic-save-deutsch">Hinzufügen</button>
+            <button type="button" class="btn-secondary" id="add-topic-cancel-deutsch">Abbrechen</button>
+            <button type="button" class="btn-primary" id="add-topic-save-deutsch">Hinzufügen</button>
           </div>
         </div>
       </div>

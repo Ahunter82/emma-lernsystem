@@ -382,16 +382,20 @@ function initAddTopic(fach) {
     if (!name) return;
 
     const plan = getPlan(fach);
-    plan.themen.push({
-      id:     plan.nextId++,
-      name,
-      status: 'geplant',
-      sterne: 0,
-    });
+    // Defensiv: nextId sicherstellen falls altes localStorage-Format ohne nextId
+    if (!plan.nextId) plan.nextId = Math.max(0, ...plan.themen.map(t => t.id || 0)) + 1;
 
-    $('add-topic-form-' + fach).classList.add('hidden');
-    $('new-topic-input-' + fach).value = '';
-    commitPlan(fach);
+    plan.themen.push({ id: plan.nextId++, name, status: 'geplant', sterne: 0 });
+
+    try {
+      commitPlan(fach);
+      // Form erst schließen wenn Commit erfolgreich
+      $('add-topic-form-' + fach).classList.add('hidden');
+      $('new-topic-input-' + fach).value = '';
+    } catch (e) {
+      console.error('commitPlan Fehler:', e);
+      alert('Fehler beim Speichern: ' + e.message);
+    }
   });
 
   // Enter-Taste
@@ -1079,10 +1083,11 @@ function renderStrategy(fach, markdown) {
 function updateAuthUI() {
   const loggedIn = DRIVE.isLoggedIn();
   $('google-login-btn').classList.toggle('hidden', loggedIn);
+  $('google-connected-btn').classList.toggle('hidden', !loggedIn);
   $('google-logout-btn').classList.toggle('hidden', !loggedIn);
-  $('user-info').classList.toggle('hidden', !loggedIn);
-  if (loggedIn && DRIVE.getUserEmail()) {
-    $('user-info').textContent = DRIVE.getUserEmail();
+  if (loggedIn) {
+    const email = DRIVE.getUserEmail();
+    $('user-info').textContent = email ? email.split('@')[0] : 'Drive';
   }
 }
 
@@ -1092,6 +1097,7 @@ function initGoogleAuth() {
     DRIVE.logout();
     updateAuthUI();
   });
+  // connected-btn ist nur zur Anzeige, kein Click nötig
 }
 
 // Lädt Kontext + Lernplan aus Drive und aktualisiert die App
