@@ -9,6 +9,9 @@
   padding: 0;
 }
 
+/* Global hidden utility – used by JS classList.toggle('hidden', ...) */
+.hidden { display: none !important; }
+
 :root {
   --primary:    #4f46e5;
   --primary-dk: #3730a3;

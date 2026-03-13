@@ -1,4 +1,4 @@
-const CACHE = 'emma-v1';
+const CACHE = 'emma-v2';
 const ASSETS = [
   '/emma-lernsystem/',
   '/emma-lernsystem/index.html',

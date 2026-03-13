@@ -152,16 +152,13 @@ function starsDisplay(n) {
 function renderPlan(fach) {
   const plan     = getPlan(fach);
   const bodyEl   = $('plan-body-' + fach);
-  const hintName = $('topic-hint-name-' + fach);
 
   if (!plan.themen.length) {
     bodyEl.innerHTML = '<p class="placeholder-text">Noch kein Lernplan. Füge das erste Thema hinzu.</p>';
-    hintName.textContent = '– kein Thema gesetzt –';
     return;
   }
 
   const aktuelles = getAktuellesThema(fach);
-  hintName.textContent = aktuelles ? aktuelles.name : '– alle Themen abgeschlossen –';
 
   const html = plan.themen.map((t, idx) => {
     const cls = 'plan-item--' + t.status;
@@ -1092,7 +1089,15 @@ function updateAuthUI() {
 }
 
 function initGoogleAuth() {
-  $('google-login-btn').addEventListener('click', () => DRIVE.login());
+  $('google-login-btn').addEventListener('click', async () => {
+    try {
+      await DRIVE.login();
+      updateAuthUI();
+      await loadFromDrive();
+    } catch (e) {
+      alert('Drive-Login fehlgeschlagen: ' + e.message);
+    }
+  });
   $('google-logout-btn').addEventListener('click', () => {
     DRIVE.logout();
     updateAuthUI();
