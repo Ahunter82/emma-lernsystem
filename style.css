@@ -525,6 +525,57 @@ main {
   justify-content: flex-end;
 }
 
+/* ---- Analyse Result ---- */
+.analyse-result {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+  font-size: .85rem;
+}
+
+.analyse-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #e0e7ff;
+  color: var(--primary);
+}
+
+.analyse-result-body {
+  padding: 12px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.analyse-result-body h4 {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 10px 0 4px;
+}
+.analyse-result-body h4:first-child { margin-top: 0; }
+
+.analyse-result-hint {
+  padding: 8px 12px;
+  background: #f0fdf4;
+  color: var(--success);
+  font-size: .8rem;
+  border-top: 1px solid #bbf7d0;
+}
+
+.btn-ghost-small {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: .9rem;
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.btn-ghost-small:hover { background: rgba(0,0,0,.08); }
+
 /* ---- File Upload ---- */
 .file-label {
   display: flex;

@@ -458,13 +458,140 @@ function initUpload(fach) {
 }
 
 // ============================================
-// ANALYSE (Placeholder – Anthropic API kommt in Schritt 3)
+// ANALYSE – Anthropic API
 // ============================================
 
-function handleAnalyse(fach) {
+async function handleAnalyse(fach) {
   if (!state.uploads[fach]) return;
   if (!state.apiKey) { showSetupModal(); return; }
-  showStatus($('analyse-status-' + fach), 'Analyse-Funktion wird in Schritt 3 implementiert (Anthropic API).', 'info');
+
+  const statusEl = $('analyse-status-' + fach);
+  const { dataUrl } = state.uploads[fach];
+
+  // Base64 ohne Data-URL-Prefix
+  const base64 = dataUrl.split(',')[1];
+  const mediaType = dataUrl.split(';')[0].split(':')[1]; // z.B. image/jpeg
+
+  const aktuellesThema = getAktuellesThema(fach);
+  const kontext = $('kontext-' + fach).value || '(kein Kontext vorhanden)';
+
+  const systemPrompt = fach === 'mathe'
+    ? `Du bist ein erfahrener Grundschullehrer in NRW. Du analysierst Fotos von Hausaufgaben und Arbeitsblättern eines Kindes der Klasse 4 namens Emma.
+Emmas bekannte Schwächen: Textaufgaben werden falsch interpretiert, arbeitet zu schnell ohne vollständiges Lesen, Zeitmanagement bei Klassenarbeiten.
+Antworte immer auf Deutsch, klar und strukturiert.`
+    : `Du bist ein erfahrener Grundschullehrer in NRW für das Fach Deutsch. Du analysierst Fotos von Hausaufgaben und Arbeitsblättern eines Kindes der Klasse 4 namens Emma.
+Antworte immer auf Deutsch, klar und strukturiert.`;
+
+  const userPrompt = `Hier ist der aktuelle Lernkontext für ${fach === 'mathe' ? 'Mathematik' : 'Deutsch'}:
+
+${kontext}
+
+${aktuellesThema ? `Aktuelles Thema im Lernplan: "${aktuellesThema.name}"` : ''}
+
+Analysiere das Foto dieses Arbeitsblatts / dieser Hausaufgabe und erstelle einen kurzen strukturierten Bericht mit:
+
+## Erkanntes Thema
+(Was wird hier geübt?)
+
+## Schwierigkeitsgrad
+(Passend für Klasse 4 NRW? Zu leicht / angemessen / zu schwer?)
+
+## Beobachtungen
+(Was hat Emma richtig gemacht? Wo gibt es Fehler oder Auffälligkeiten?)
+
+## Empfehlung
+(Was sollte als nächstes geübt werden? Passt das zum Lernplan?)
+
+## Kontext-Update
+(1-3 Sätze die direkt an den bestehenden Kontext angehängt werden sollen, im Stil: "Datum: [heute]. Beobachtung: ...")
+
+Halte dich kurz und präzise. Keine langen Einleitungen.`;
+
+  showLoading('Foto wird analysiert…');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':         'application/json',
+        'x-api-key':            state.apiKey,
+        'anthropic-version':    '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system:     systemPrompt,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text',  text: userPrompt },
+          ],
+        }],
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data   = await response.json();
+    const result = data.content[0].text;
+
+    // Analyse-Ergebnis anzeigen
+    showAnalyseResult(fach, result);
+
+    // Kontext-Update extrahieren und anhängen
+    const updateMatch = result.match(/## Kontext-Update\s*([\s\S]*?)(?=##|$)/i);
+    if (updateMatch) {
+      const update   = updateMatch[1].trim();
+      const existing = $('kontext-' + fach).value;
+      const updated  = existing
+        ? existing + '\n\n---\n' + update
+        : update;
+      $('kontext-' + fach).value = updated;
+      localStorage.setItem('emma_kontext_' + fach, updated);
+      if (DRIVE.isLoggedIn()) {
+        await DRIVE.writeFile(`kontext-${fach}.md`, updated);
+      }
+    }
+
+  } catch (e) {
+    showStatus(statusEl, 'Fehler: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function showAnalyseResult(fach, text) {
+  const statusEl = $('analyse-status-' + fach);
+
+  // Ergebnis-Box aufbauen
+  let box = document.getElementById('analyse-result-' + fach);
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'analyse-result-' + fach;
+    box.className = 'analyse-result';
+    statusEl.parentNode.insertBefore(box, statusEl.nextSibling);
+  }
+
+  // Markdown-ähnliche Formatierung (nur ## Überschriften + Zeilenumbrüche)
+  const html = text
+    .replace(/## (.+)/g, '<h4>$1</h4>')
+    .replace(/\n/g, '<br>');
+
+  box.innerHTML = `
+    <div class="analyse-result-header">
+      <strong>Analyse-Ergebnis</strong>
+      <button class="btn-ghost-small" onclick="this.closest('.analyse-result').remove()">✕</button>
+    </div>
+    <div class="analyse-result-body">${html}</div>
+    <p class="analyse-result-hint">✅ Kontext wurde automatisch aktualisiert.</p>
+  `;
+
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ============================================
