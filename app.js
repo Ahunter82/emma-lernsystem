@@ -75,6 +75,10 @@ function loadPlan() {
 
 function savePlan() {
   localStorage.setItem('emma_lernplan', JSON.stringify(state.plan));
+  // Auch in Drive speichern wenn eingeloggt
+  if (DRIVE.isLoggedIn()) {
+    DRIVE.writeFile('lernplan.json', JSON.stringify(state.plan, null, 2)).catch(console.error);
+  }
 }
 
 function getPlan(fach) { return state.plan[fach]; }
@@ -471,9 +475,20 @@ function initKontext(fach) {
   const saved = localStorage.getItem('emma_kontext_' + fach);
   if (saved) $('kontext-' + fach).value = saved;
 
-  $('save-kontext-' + fach).addEventListener('click', () => {
-    localStorage.setItem('emma_kontext_' + fach, $('kontext-' + fach).value);
-    showStatus($('kontext-status-' + fach), 'Lokal gespeichert (Google Drive folgt in Schritt 2).');
+  $('save-kontext-' + fach).addEventListener('click', async () => {
+    const text = $('kontext-' + fach).value;
+    localStorage.setItem('emma_kontext_' + fach, text);
+
+    if (DRIVE.isLoggedIn()) {
+      try {
+        await DRIVE.writeFile(`kontext-${fach}.md`, text);
+        showStatus($('kontext-status-' + fach), 'In Google Drive gespeichert.');
+      } catch (e) {
+        showStatus($('kontext-status-' + fach), 'Drive-Fehler: ' + e.message, 'error');
+      }
+    } else {
+      showStatus($('kontext-status-' + fach), 'Lokal gespeichert (nicht mit Drive verbunden).');
+    }
   });
 }
 
@@ -533,23 +548,70 @@ function saveApiKey(key) {
 }
 
 // ============================================
-// GOOGLE AUTH PLACEHOLDER
+// GOOGLE AUTH
 // ============================================
 
+function updateAuthUI() {
+  const loggedIn = DRIVE.isLoggedIn();
+  $('google-login-btn').classList.toggle('hidden', loggedIn);
+  $('google-logout-btn').classList.toggle('hidden', !loggedIn);
+  $('user-info').classList.toggle('hidden', !loggedIn);
+  if (loggedIn && DRIVE.getUserEmail()) {
+    $('user-info').textContent = DRIVE.getUserEmail();
+  }
+}
+
 function initGoogleAuth() {
-  $('google-login-btn').addEventListener('click', () => {
-    alert('Google Drive Login wird in Schritt 2 implementiert.');
-  });
+  $('google-login-btn').addEventListener('click', () => DRIVE.login());
   $('google-logout-btn').addEventListener('click', () => {
-    alert('Google Drive Logout wird in Schritt 2 implementiert.');
+    DRIVE.logout();
+    updateAuthUI();
   });
+}
+
+// Lädt Kontext + Lernplan aus Drive und aktualisiert die App
+async function loadFromDrive() {
+  showLoading('Drive wird geladen…');
+  try {
+    // Lernplan
+    const planRaw = await DRIVE.readFile('lernplan.json');
+    if (planRaw) {
+      try {
+        const parsed = JSON.parse(planRaw);
+        state.plan = parsed;
+        localStorage.setItem('emma_lernplan', planRaw);
+      } catch { /* korrupte Datei ignorieren */ }
+    } else {
+      // Erster Start: Default-Plan in Drive schreiben
+      await DRIVE.writeFile('lernplan.json', JSON.stringify(state.plan, null, 2));
+    }
+
+    // Kontext-Dateien
+    for (const fach of ['mathe', 'deutsch']) {
+      const kontext = await DRIVE.readFile(`kontext-${fach}.md`);
+      if (kontext) {
+        $('kontext-' + fach).value = kontext;
+        localStorage.setItem('emma_kontext_' + fach, kontext);
+      } else {
+        // Erster Start: lokalen Inhalt in Drive schreiben
+        const lokal = localStorage.getItem('emma_kontext_' + fach) || '';
+        if (lokal) await DRIVE.writeFile(`kontext-${fach}.md`, lokal);
+      }
+      renderPlan(fach);
+      renderRanking(fach);
+    }
+  } catch (e) {
+    console.error('Drive Ladefehler:', e);
+  } finally {
+    hideLoading();
+  }
 }
 
 // ============================================
 // INIT
 // ============================================
 
-function init() {
+async function init() {
   initTabs();
   initToggles();
   initAbschlussModal();
@@ -565,6 +627,15 @@ function init() {
 
   initApiKeySetup();
   initGoogleAuth();
+
+  // Drive initialisieren (Token aus URL-Hash oder localStorage)
+  try {
+    const loggedIn = await DRIVE.init();
+    updateAuthUI();
+    if (loggedIn) await loadFromDrive();
+  } catch (e) {
+    console.error('Drive init Fehler:', e);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
