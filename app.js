@@ -74,10 +74,10 @@ function loadPlan() {
 }
 
 function savePlan() {
-  localStorage.setItem('emma_lernplan', JSON.stringify(state.plan));
-  // Auch in Drive speichern wenn eingeloggt
+  const json = JSON.stringify(state.plan, null, 2);
+  localStorage.setItem('emma_lernplan', json);           // Cache
   if (DRIVE.isLoggedIn()) {
-    DRIVE.writeFile('lernplan.json', JSON.stringify(state.plan, null, 2)).catch(console.error);
+    DRIVE.writeFile('lernplan.json', json).catch(console.error); // Quelle
   }
 }
 
@@ -289,6 +289,7 @@ function commitPlan(fach) {
   savePlan();
   renderPlan(fach);
   renderRanking(fach);
+  renderTopicSelector(fach);
 }
 
 // ============================================
@@ -626,17 +627,65 @@ function initKontext(fach) {
 // PDF PLACEHOLDER
 // ============================================
 
+// ---- Topic Selector ----
+
+function renderTopicSelector(fach) {
+  const plan      = getPlan(fach);
+  const container = $('topic-selector-' + fach);
+  const btnUebung = $('gen-uebung-' + fach);
+  const btnKlausur= $('gen-klausur-' + fach);
+
+  if (!plan.themen.length) {
+    container.innerHTML = '<p class="placeholder-text">Erst Themen im Lernplan anlegen.</p>';
+    btnUebung.disabled = btnKlausur.disabled = true;
+    return;
+  }
+
+  container.innerHTML = plan.themen.map(t => {
+    const badge = t.status === 'abgeschlossen' ? '<span class="ts-badge ts-done">✓</span>'
+                : t.status === 'aktuell'       ? '<span class="ts-badge ts-current">→</span>'
+                :                                '';
+    return `<label class="ts-item">
+      <input type="checkbox" class="ts-check" data-fach="${fach}" data-id="${t.id}"
+        ${t.status === 'aktuell' ? 'checked' : ''} />
+      <span class="ts-name">${escHtml(t.name)}</span>
+      ${badge}
+    </label>`;
+  }).join('');
+
+  // Buttons aktivieren sobald mind. 1 Thema gewählt
+  container.querySelectorAll('.ts-check').forEach(cb => {
+    cb.addEventListener('change', () => updatePdfButtons(fach));
+  });
+  updatePdfButtons(fach);
+}
+
+function updatePdfButtons(fach) {
+  const any = !!document.querySelector(`#topic-selector-${fach} .ts-check:checked`);
+  $('gen-uebung-'  + fach).disabled = !any;
+  $('gen-klausur-' + fach).disabled = !any;
+}
+
+function getSelectedTopics(fach) {
+  return [...document.querySelectorAll(`#topic-selector-${fach} .ts-check:checked`)]
+    .map(cb => {
+      const id = parseInt(cb.dataset.id);
+      return getPlan(fach).themen.find(t => t.id === id)?.name;
+    })
+    .filter(Boolean);
+}
+
 function initPdfButtons(fach) {
-  $('gen-uebung-' + fach).addEventListener('click', () => handleGeneratePdf(fach, 'uebung'));
+  $('gen-uebung-'  + fach).addEventListener('click', () => handleGeneratePdf(fach, 'uebung'));
   $('gen-klausur-' + fach).addEventListener('click', () => handleGeneratePdf(fach, 'klausur'));
 }
 
 async function handleGeneratePdf(fach, modus) {
   if (!state.apiKey) { showSetupModal(); return; }
 
-  const thema = getAktuellesThema(fach);
-  if (!thema) {
-    alert('Bitte erst ein aktuelles Thema im Lernplan setzen.');
+  const themen = getSelectedTopics(fach);
+  if (!themen.length) {
+    alert('Bitte mindestens ein Thema auswählen.');
     return;
   }
 
@@ -644,7 +693,7 @@ async function handleGeneratePdf(fach, modus) {
   showLoading(`${label} wird generiert…`);
 
   try {
-    await PDF.generate(fach, modus, state.apiKey);
+    await PDF.generate(fach, modus, state.apiKey, themen);
   } catch (e) {
     alert('Fehler beim Generieren: ' + e.message);
   } finally {
@@ -1081,6 +1130,7 @@ async function loadFromDrive() {
 
       renderPlan(fach);
       renderRanking(fach);
+      renderTopicSelector(fach);
     }
   } catch (e) {
     console.error('Drive Ladefehler:', e);
@@ -1107,6 +1157,7 @@ async function init() {
     initErgebnis(fach);
     renderPlan(fach);
     renderRanking(fach);
+    renderTopicSelector(fach);
   });
 
   initApiKeySetup();

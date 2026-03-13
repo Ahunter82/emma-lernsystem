@@ -587,6 +587,61 @@ main {
   justify-content: flex-end;
 }
 
+/* ---- Topic Selector ---- */
+.selector-hint {
+  font-size: .82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--text-muted);
+}
+
+.topic-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ts-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  font-size: .88rem;
+}
+
+.ts-item:hover { border-color: var(--primary); background: #eef2ff; }
+
+.ts-item:has(.ts-check:checked) {
+  border-color: var(--primary);
+  background: #eef2ff;
+}
+
+.ts-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.ts-name { flex: 1; }
+
+.ts-badge {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.ts-current { background: #e0e7ff; color: var(--primary); }
+.ts-done    { background: #dcfce7; color: var(--success); }
+
 /* ---- Ergebnis einreichen ---- */
 .ergebnis-hint {
   font-size: .85rem;

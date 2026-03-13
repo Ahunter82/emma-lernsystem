@@ -10,15 +10,18 @@ const PDF = (() => {
 
   // ---- Prompts ----
 
-  function buildPrompt(fach, kontext, thema, modus) {
+  function buildPrompt(fach, kontext, themen, modus) {
     const fachName  = fach === 'mathe' ? 'Mathematik' : 'Deutsch';
     const modusText = modus === 'klausur'
       ? 'eine Klassenarbeit (Schulaufgabe) im NRW Klasse-4-Format, ca. 45 Minuten, realistischer Schwierigkeitsgrad'
       : 'ein Übungsblatt zum Üben zu Hause, ca. 20–30 Minuten, aufbauend von leicht nach schwer';
+    const themenText = themen.length === 1
+      ? `Thema: "${themen[0]}"`
+      : `Themen (alle abdecken, Aufgaben sinnvoll verteilen):\n${themen.map((t, i) => `${i+1}. "${t}"`).join('\n')}`;
 
     return `Du erstellst ${modusText} für Emma, Klasse 4 NRW, Fach ${fachName}.
 
-Aktuelles Thema: "${thema}"
+${themenText}
 
 Lernkontext (Emmas Stand, Stärken und Schwächen):
 ${kontext}
@@ -61,7 +64,7 @@ Regeln:
 
   // ---- API-Aufruf ----
 
-  async function fetchWorksheet(fach, kontext, thema, modus, apiKey) {
+  async function fetchWorksheet(fach, kontext, themen, modus, apiKey) {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -75,7 +78,7 @@ Regeln:
         max_tokens: 2048,
         messages: [{
           role:    'user',
-          content: buildPrompt(fach, kontext, thema, modus),
+          content: buildPrompt(fach, kontext, themen, modus),
         }],
       }),
     });
@@ -442,12 +445,10 @@ Regeln:
 
   // ---- Public: Generieren & Öffnen ----
 
-  async function generate(fach, modus, apiKey) {
-    const thema   = window.getAktuellesThema ? getAktuellesThema(fach) : null;
-    if (!thema) throw new Error('Kein aktives Thema im Lernplan gesetzt.');
-
+  async function generate(fach, modus, apiKey, themen) {
+    if (!themen?.length) throw new Error('Kein Thema ausgewählt.');
     const kontext = document.getElementById('kontext-' + fach)?.value || '';
-    const sheet   = await fetchWorksheet(fach, kontext, thema.name, modus, apiKey);
+    const sheet   = await fetchWorksheet(fach, kontext, themen, modus, apiKey);
 
     const html    = renderHtml(sheet, fach, modus);
     const win     = window.open('', '_blank');
